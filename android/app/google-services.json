@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "218518500574",
+    "project_id": "health-hive-42ecc",
+    "storage_bucket": "health-hive-42ecc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218518500574:android:8bf10bfcce7a52fe483e4f",
+        "android_client_info": {
+          "package_name": "com.example.health_hive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABEW8BnPCLKTGkoFXD29bz58AyUznIjow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
