@@ -56,7 +56,7 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
           .doc(userCredential.user!.uid)
           .set({
             'uid': userCredential.user!.uid,
-            'name': 'Dr. ' + _nameController.text.trim(),
+            'name': 'Dr. ${_nameController.text.trim()}',
             'email': _emailController.text.trim(),
             'pmdcNumber': _pmdcController.text.trim(),
             'specialty': _selectedSpecialty,
@@ -234,7 +234,7 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
 
                       // Specialty Dropdown
                       DropdownButtonFormField<String>(
-                        value: _selectedSpecialty,
+                        initialValue: _selectedSpecialty,
                         decoration: InputDecoration(
                           labelText: 'Select Specialization',
                           prefixIcon: const Icon(

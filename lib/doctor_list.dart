@@ -12,13 +12,9 @@ class DoctorListScreen extends StatefulWidget {
 }
 
 class _DoctorListScreenState extends State<DoctorListScreen> {
-  final List<String> _slots = ['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM'];
-  String? _selectedSlot;
-
   int? _selectedDocIndex;
-  String? _selectedDocId;
   String? _selectedDocName;
-  String? _selectedDocFees; // Dynamic variable to store fees locally
+  String? _selectedDocFees;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +31,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Select Doctor & Time Slot',
+              'Select Doctor',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -73,7 +69,6 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
                       final doc = docs[index].data() as Map<String, dynamic>;
-                      final docId = docs[index].id;
                       bool isSelected = _selectedDocIndex == index;
 
                       return Card(
@@ -107,11 +102,9 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                           onTap: () {
                             setState(() {
                               _selectedDocIndex = index;
-                              _selectedDocId = docId;
-                              _selectedDocName = doc['name'];
+                              _selectedDocName = doc['name'] ?? 'Dr. Expert';
                               _selectedDocFees =
-                                  doc['fees'] ??
-                                  '2000'; // Capture dynamic fee on tap
+                                  doc['fees']?.toString() ?? '2000';
                             });
                           },
                         ),
@@ -122,54 +115,21 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
               ),
             ),
 
-            const Divider(),
-            const Text(
-              'Available Slots',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            SizedBox(
-              height: 50,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _slots.length,
-                itemBuilder: (context, index) {
-                  bool isSlotSelected = _selectedSlot == _slots[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10.0),
-                    child: ChoiceChip(
-                      label: Text(_slots[index]),
-                      selected: isSlotSelected,
-                      selectedColor: Colors.teal,
-                      labelStyle: TextStyle(
-                        color: isSlotSelected ? Colors.white : Colors.black,
-                      ),
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedSlot = selected ? _slots[index] : null;
-                        });
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: (_selectedDocIndex != null && _selectedSlot != null)
+                onPressed: (_selectedDocIndex != null)
                     ? () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => BookingPaymentScreen(
                               doctorName: _selectedDocName!,
-                              doctorFees: 'Rs. $_selectedDocFees', // Dynamic allocation map fixed
-                              selectedSlot: _selectedSlot!,
+                              doctorFees: 'Rs. ${_selectedDocFees ?? "2000"}',
+                              selectedSlot: 'Pending Assignment',
                             ),
                           ),
                         );

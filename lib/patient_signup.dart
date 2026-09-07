@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'patient_dashboard.dart';
+import 'email_verification.dart';
+import 'patient_login.dart';
 
 class PatientSignupScreen extends StatefulWidget {
   const PatientSignupScreen({super.key});
@@ -13,8 +14,6 @@ class PatientSignupScreen extends StatefulWidget {
 
 class _PatientSignupScreenState extends State<PatientSignupScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  // Input Controllers
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -23,7 +22,6 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  // Firebase Real-time Signup Function
   Future<void> _registerPatient() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -32,14 +30,16 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     });
 
     try {
-      // 1. Create User Account in Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
 
-      // 2. Save Patient Details into Firestore Database
+      // === FIREBASE LINK VERIFICATION SYSTEM ===
+      await userCredential.user!.sendEmailVerification();
+      // =========================================
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -48,30 +48,42 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
             'phone': _phoneController.text.trim(),
-            'role': 'Patient', // Explicitly tagging the role
+            'role': 'Patient',
             'createdAt': FieldValue.serverTimestamp(),
           });
 
       if (mounted) {
-        // Go to dashboard and clean the back history route
-        Navigator.pushAndRemoveUntil(
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'A verification link has been dispatched to your email address.',
+            ),
+            backgroundColor: Colors.teal,
+          ),
+        );
+
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const PatientDashboardScreen(),
+            builder: (context) => const EmailVerificationScreen(),
           ),
-          (route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
-      String errorMsg = 'Registration failed. Try again.';
+      String errorMsg = 'Registration failed.';
       if (e.code == 'email-already-in-use') {
         errorMsg = 'This email is already registered.';
       } else if (e.code == 'weak-password') {
         errorMsg = 'The password provided is too weak.';
       }
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMsg), backgroundColor: Colors.redAccent),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('An error occurred. Please check network.'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -98,6 +110,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.teal),
+        elevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.teal))
@@ -116,20 +129,19 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Create Patient Account',
+                        'Create Account',
                         style: TextStyle(
-                          fontSize: 26,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.teal,
                         ),
                       ),
                       const Text(
-                        'Sign up to connect with healthcare specialists',
-                        style: TextStyle(color: Colors.grey),
+                        'Join Health Hive medical network',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
                       const SizedBox(height: 32),
 
-                      // Name
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
@@ -144,7 +156,6 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Email
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -156,17 +167,16 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                           ),
                         ),
                         validator: (value) =>
-                            value!.isEmpty ? 'Please enter email' : null,
+                            value!.isEmpty ? 'Please enter your email' : null,
                       ),
                       const SizedBox(height: 16),
 
-                      // Phone Number
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           labelText: 'Phone Number',
-                          prefixIcon: const Icon(Icons.phone_android_outlined),
+                          prefixIcon: const Icon(Icons.phone_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -176,7 +186,6 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Password
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -206,7 +215,6 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Register Button
                       SizedBox(
                         width: double.infinity,
                         height: 55,
@@ -220,9 +228,31 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                             ),
                           ),
                           child: const Text(
-                            'Register Account',
+                            'Create Account',
                             style: TextStyle(
                               fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PatientLoginScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Already have an account? Sign In",
+                            style: TextStyle(
+                              color: Colors.teal,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
